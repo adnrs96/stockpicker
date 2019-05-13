@@ -1,5 +1,8 @@
 from typing import List
+from collections import defaultdict, OrderedDict
+from dateutil.parser import parse as dateparser
 import math
+import datetime
 
 def get_mean_of_stocks(stocks: List[float]) -> float:
     return sum(stocks)/len(stocks)
@@ -48,3 +51,16 @@ def find_buy_sell_price_index(stock_prices: List[float]) -> Tuple[int, int]:
 
 def find_profit_for_buy_sell(buyp: float, sellp: float, stock_units: int) -> float:
     return (sellp - buyp)*stock_units
+
+def build_stock_dict(csv_filename: str) -> Dict[str: Dict[datetime.datetime, float]]:
+    stocks = defaultdict(OrderedDict())
+    with open(csv_filename) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                line_count += 1
+            else:
+                stocks[row[0]][dateparser(row[1])] = row[2]
+                line_count += 1
+    return stocks
