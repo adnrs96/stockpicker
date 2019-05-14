@@ -59,19 +59,24 @@ def find_profit_for_buy_sell(buyp: float, sellp: float, stock_units: int) -> flo
 
 def build_stock_dict(csv_filename: str) -> Dict[str, Dict[datetime.datetime, float]]:
     stocks = defaultdict(OrderedDict)
-    with open(csv_filename) as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-        for row in csv_reader:
-            if line_count == 0:
-                line_count += 1
-            else:
-                try:
-                    stocks[row[0]][dateparser(row[1])] = float(row[2])
-                except ValueError:
-                    print('Invalid data found in csv file. Exiting...')
-                    sys.exit(1)
-                line_count += 1
+    try:
+        with open(csv_filename) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=',')
+            line_count = 0
+            for row in csv_reader:
+                if line_count == 0:
+                    line_count += 1
+                else:
+                    try:
+                        stocks[row[0]][dateparser(row[1])] = float(row[2])
+                    except ValueError:
+                        print('Invalid data found in csv file. Exiting...')
+                        sys.exit(1)
+                    line_count += 1
+    except FileNotFoundError:
+        print('Please ensure that the csv data file exists and you passed on the correct path.')
+        sys.exit(1)
+
     for stock in stocks:
         stocks[stock] = OrderedDict(sorted(stocks[stock].items(), key=lambda x: x[0]))
     return stocks
@@ -144,6 +149,10 @@ def match_stock(stock_name: str,
     return (min_dis_stock_name, 0)
 
 def main():
+    if len(sys.argv) < 2:
+        print('Please run again with path to csv data file')
+        sys.exit(1)
+
     csv_filename = sys.argv[1]
 
     print('Loading...')
