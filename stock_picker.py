@@ -66,7 +66,11 @@ def build_stock_dict(csv_filename: str) -> Dict[str, Dict[datetime.datetime, flo
             if line_count == 0:
                 line_count += 1
             else:
-                stocks[row[0]][dateparser(row[1])] = float(row[2])
+                try:
+                    stocks[row[0]][dateparser(row[1])] = float(row[2])
+                except ValueError:
+                    print('Invalid data found in csv file. Exiting...')
+                    sys.exit(1)
                 line_count += 1
     for stock in stocks:
         stocks[stock] = OrderedDict(sorted(stocks[stock].items(), key=lambda x: x[0]))
