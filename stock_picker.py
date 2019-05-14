@@ -68,6 +68,8 @@ def build_stock_dict(csv_filename: str) -> Dict[str, Dict[datetime.datetime, flo
             else:
                 stocks[row[0]][dateparser(row[1])] = float(row[2])
                 line_count += 1
+    for stock in stocks:
+        stocks[stock] = OrderedDict(sorted(stocks[stock].items(), key=lambda x: x[0]))
     return stocks
 
 def take_action(stocks: Dict[str, Dict[datetime.datetime, float]],
