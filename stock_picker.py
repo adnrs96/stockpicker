@@ -159,7 +159,9 @@ def main():
             else:
                 continue
 
+        print('From which date you want to start')
         start_date = dateparser(input())
+        print('Till which date you want to analyze')
         end_date = dateparser(input())
 
         if end_date <= start_date or (end_date - start_date) > datetime.timedelta(days=90):
@@ -170,10 +172,15 @@ def main():
             print("Stock didn't start trading until %s Please enter a valid start date.", (stocks[stock_name].keys()[0]))
             continue
 
-        print(take_action(stocks, stock_name, start_date, end_date))
-
+        mean, sd, buyd, selld, profit = take_action(stocks, stock_name, start_date, end_date)
+        print("-----------Here is you result------------------")
+        print("Mean: %f, Std: %f, Buy date: %s, Sell Date: %s, Profit: %f" % (
+            mean, sd, buyd.strftime('%d %b %Y'), selld.strftime('%d %b %Y'), profit
+        ))
+        print("-----------------------------------------------")
+        print('Do you want to continue? (y or n)')
         should_exit = input()
-        if should_exit.lower() in ('y', 'yes'):
+        if should_exit.lower() not in ('y', 'yes'):
             print('Quiting....')
             break
 
