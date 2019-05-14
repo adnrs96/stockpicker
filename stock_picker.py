@@ -111,6 +111,34 @@ def take_action(stocks: Dict[str, Dict[datetime.datetime, float]],
 
     return (mean, sd, buyd, selld, profit)
 
+def editdistance(s1: str, i1: int, s2: str, i2: int, mem: Dict[Tuple[int,int], int]) -> int:
+    if i1 == len(s1):
+        return len(s2) - i2
+    if i2 == len(s2):
+        return len(s1) - i1
+    if (i1, i2) in mem:
+        return mem[(i1, i2)]
+
+    if s1[i1] == s2[i2]:
+        mem[(i1, i2)] = editdistance(s1, i1+1, s2, i2+1, mem)
+    else:
+        mem[(i1, i2)] = 1 + min(editdistance(s1, i1, s2, i2+1, mem), editdistance(s1, i1+1, s2, i2, mem))
+    return mem[(i1, i2)]
+
+def match_stock(stock_name: str,
+                stocks: Dict[str, Dict[datetime.datetime, float]]) -> (str, bool):
+    min_dis = len(stock_name)*100
+    min_dis_stock_name = stock_name
+    for stock in stocks:
+        mem = defaultdict(int)
+        dis = editdistance(stock, 0, stock_name, 0, mem)
+        if dis < min_dis:
+            min_dis = dis
+            min_dis_stock_name = stock
+    if min_dis_stock_name == stock_name:
+        return (min_dis_stock_name, 1)
+    return (min_dis_stock_name, 0)
+
 def main():
     csv_filename = sys.argv[1]
 
@@ -119,7 +147,18 @@ def main():
     print('Loaded!!!')
 
     while True:
+        print('Which stock you need to process?')
         stock_name = input()
+
+        possible_stock_name, found = match_stock(stock_name, stocks)
+        if not found:
+            print('Oops Did you mean %s? Press y or n' % (possible_stock_name))
+            val = input()
+            if val.lower() in ('y', 'yes'):
+                stock_name = possible_stock_name
+            else:
+                continue
+
         start_date = dateparser(input())
         end_date = dateparser(input())
 
