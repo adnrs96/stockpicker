@@ -120,6 +120,15 @@ def main():
         stock_name = input()
         start_date = dateparser(input())
         end_date = dateparser(input())
+
+        if end_date <= start_date or (end_date - start_date) > datetime.timedelta(days=90):
+            print('Invalid date range! Please make sure start date is before end date with maximum range of 90 days.')
+            continue
+
+        if start_date < list(stocks[stock_name].keys())[0]:
+            print("Stock didn't start trading until %s Please enter a valid start date.", (stocks[stock_name].keys()[0]))
+            continue
+
         print(take_action(stocks, stock_name, start_date, end_date))
 
         should_exit = input()
