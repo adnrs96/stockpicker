@@ -1,8 +1,10 @@
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from collections import defaultdict, OrderedDict
 from dateutil.parser import parse as dateparser
 import math
 import datetime
+import sys
+import csv
 
 def get_mean_of_stocks(stocks: List[float]) -> float:
     return sum(stocks)/len(stocks)
@@ -30,20 +32,23 @@ def find_buy_sell_price_index(stock_prices: List[float]) -> Tuple[int, int]:
     mini = 0
     maxi = 0
 
-    def update_actual_max_min(mini: int, maxi: int) -> None:
+    def update_actual_max_min(mini: float,
+                              maxi: float,
+                              min_i:float,
+                              max_i:float) -> (float, float):
         if maxi != mini:
             if diff(min_i, max_i) < diff(mini, maxi):
-                min_i = mini
-                max_i = maxi
+                return (mini, maxi)
+        return (min_i, max_i)
 
-    for i, x in enumeration(stock_prices):
+    for i, x in enumerate(stock_prices):
         if stock_prices[maxi] < x:
             maxi = i
         if stock_prices[mini] > x:
-            update_actual_max_min(mini, maxi)
+            min_i, max_i = update_actual_max_min(mini, maxi, min_i, max_i)
             mini = i
             maxi = i
-    update_actual_max_min(mini, maxi)
+    min_i, max_i = update_actual_max_min(mini, maxi, min_i, max_i)
 
     if min_i == -1:
         return (0, 0)
@@ -52,8 +57,8 @@ def find_buy_sell_price_index(stock_prices: List[float]) -> Tuple[int, int]:
 def find_profit_for_buy_sell(buyp: float, sellp: float, stock_units: int) -> float:
     return (sellp - buyp)*stock_units
 
-def build_stock_dict(csv_filename: str) -> Dict[str: Dict[datetime.datetime, float]]:
-    stocks = defaultdict(OrderedDict())
+def build_stock_dict(csv_filename: str) -> Dict[str, Dict[datetime.datetime, float]]:
+    stocks = defaultdict(OrderedDict)
     with open(csv_filename) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
         line_count = 0
@@ -61,11 +66,11 @@ def build_stock_dict(csv_filename: str) -> Dict[str: Dict[datetime.datetime, flo
             if line_count == 0:
                 line_count += 1
             else:
-                stocks[row[0]][dateparser(row[1])] = row[2]
+                stocks[row[0]][dateparser(row[1])] = float(row[2])
                 line_count += 1
     return stocks
 
-def take_action(stocks: Dict[str: Dict[datetime.datetime, float]],
+def take_action(stocks: Dict[str, Dict[datetime.datetime, float]],
                 stock_name: str,
                 start_date: datetime.datetime,
                 end_date: datetime.datetime
@@ -84,7 +89,7 @@ def take_action(stocks: Dict[str: Dict[datetime.datetime, float]],
         else:
             break
     last_price = contextual_stocks[last_date]
-    delta = date + datetime.timedelta(days=1)
+    delta = datetime.timedelta(days=1)
     date = start_date
     dates = set(contextual_stocks.keys())
     while date <= end_date:
@@ -103,3 +108,24 @@ def take_action(stocks: Dict[str: Dict[datetime.datetime, float]],
     profit = find_profit_for_buy_sell(stock_list[buydelta], stock_list[selldelta], 100)
 
     return (mean, sd, buyd, selld, profit)
+
+def main():
+    csv_filename = sys.argv[1]
+
+    print('Loading...')
+    stocks = build_stock_dict(csv_filename)
+    print('Loaded!!!')
+
+    while True:
+        stock_name = input()
+        start_date = dateparser(input())
+        end_date = dateparser(input())
+        print(take_action(stocks, stock_name, start_date, end_date))
+
+        should_exit = input()
+        if should_exit.lower() in ('y', 'yes'):
+            print('Quiting....')
+            break
+
+if __name__ == "__main__":
+    main()
